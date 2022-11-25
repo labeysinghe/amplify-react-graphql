@@ -1,70 +1,36 @@
-# Getting Started with Create React App
+# Introduction
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This project is created using AWS Cloudformation. Scripts are written using YAML. 
 
-## Available Scripts
+## Approach
 
-In the project directory, you can run:
+To achieve the technical challenge, I have taken a three-steps approach. 
+1. S3 bucket is created initially. This bucket at first will include a folder called 'data'. The purpose is this folder is to include some dummy data (foo.csv), to be imported into DynamoDB table, which will be created in the next step.
 
-### `npm start`
+2. DynamoDB table (Movies) is created and data in imported to the table. (DynamoDB DescribeTable API uses an eventually consistent query, and the metadata for your table might not be available at that moment. Wait for a few seconds)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+3. Data Pipeline is created to backup data from DynamoDB to S3 bucket.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Prerequisites
+### aws-cli
+aws cli should be installed and configured
 
-### `npm test`
+### AWS region
+As AWS Data Pipeline is not available in every region yet, make sure to select a suitable region. I've used Ireland (eu-west-1)
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Launch
+### Step 01 - Using AWS CloudFront Console
+1. Login to the console to select CloudFront
+2. `Create Stack`--> `Template is ready` --> `Upload a template file` --> `Choose file` --> `Next`
+3. Provide a `Stack Name` --> `Next` --> `Next`
+4. CloudFront will create the resources accordingly. However, make sure to check on `I acknowledge that AWS CloudFormation might create IAM resources.`  when you deploy 3rd template (backupdynamodb.yml) 
 
-### `npm run build`
+### Step 02 -  Using AWS CLI
+templates can be deployed using below command.
+Example: 
+`aws cloudformation create-stack \
+--stack-name "importstack"
+--template-body file://path/creates3bucket.yml
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+# Disclaimer
+Please note datapipeline template is not working giving an error `DataPipeline cannot assume role: 'DataPipeLineRole' to validate EMR cluster object`. This role is created as `DataPipelineDefaultRole` is deprecated since October 3, 2022. https://docs.aws.amazon.com/datapipeline/latest/DeveloperGuide/dp-iam-roles.html
